@@ -1,7 +1,6 @@
 package com.simon.openglremote;
 
 import android.content.Context;
-import android.graphics.Color;
 import android.graphics.Point;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
@@ -17,6 +16,7 @@ import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.SeekBar;
 import android.widget.TextView;
 
 public class MainActivity extends AppCompatActivity implements SocketManager.SocketListener, SensorEventListener {
@@ -30,6 +30,7 @@ public class MainActivity extends AppCompatActivity implements SocketManager.Soc
     private Point p1, p2, p3;
     private Point p_translate, p_rotate, p_scale;
     private ImageView touchPad;
+    private SeekBar sb_color_r, sb_color_g, sb_color_b, sb_opacity, sb_stiffness, sb_brushsize;
     private int send_type;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -37,6 +38,13 @@ public class MainActivity extends AppCompatActivity implements SocketManager.Soc
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         send_type = 1;
+
+        sb_color_r = (SeekBar) findViewById(R.id.slider_color_r);
+        sb_color_g = (SeekBar) findViewById(R.id.slider_color_r);
+        sb_color_b = (SeekBar) findViewById(R.id.slider_color_r);
+        sb_opacity = (SeekBar) findViewById(R.id.slider_opacity);
+        sb_stiffness = (SeekBar) findViewById(R.id.slider_stiffness);
+        sb_brushsize = (SeekBar) findViewById(R.id.slider_brushsize);
 
         touchPad = (ImageView) findViewById(R.id.touchPad);
         p1 = new Point(0,0);
@@ -57,6 +65,59 @@ public class MainActivity extends AppCompatActivity implements SocketManager.Soc
 
         textView_status = (TextView) findViewById(R.id.textView_status);
 
+        sb_color_r.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                mSocketManager.sendMessage("1011;" + (float) progress / 100.0f);
+            }
+            public void onStartTrackingTouch(SeekBar seekBar) { }
+            public void onStopTrackingTouch(SeekBar seekBar) { }
+
+        });
+
+        sb_color_g.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                mSocketManager.sendMessage("1012;" + (float) progress / 100.0f);
+            }
+            public void onStartTrackingTouch(SeekBar seekBar) { }
+            public void onStopTrackingTouch(SeekBar seekBar) { }
+
+        });
+
+        sb_color_b.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                mSocketManager.sendMessage("1013;" + (float) progress / 100.0f);
+            }
+            public void onStartTrackingTouch(SeekBar seekBar) { }
+            public void onStopTrackingTouch(SeekBar seekBar) { }
+
+        });
+
+        sb_opacity.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                mSocketManager.sendMessage("102;" + (float) progress / 100.0f);
+            }
+            public void onStartTrackingTouch(SeekBar seekBar) { }
+            public void onStopTrackingTouch(SeekBar seekBar) { }
+
+        });
+
+        sb_stiffness.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                mSocketManager.sendMessage("103;" + (float) progress / 100.0f);
+            }
+            public void onStartTrackingTouch(SeekBar seekBar) { }
+            public void onStopTrackingTouch(SeekBar seekBar) { }
+
+        });
+
+        sb_brushsize.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                mSocketManager.sendMessage("104;" + (float) progress / 100.0f);
+            }
+            public void onStartTrackingTouch(SeekBar seekBar) { }
+            public void onStopTrackingTouch(SeekBar seekBar) { }
+
+        });
 
         touchPad.setOnTouchListener(new View.OnTouchListener() {
             public boolean onTouch(View v, MotionEvent event) {
@@ -136,6 +197,16 @@ public class MainActivity extends AppCompatActivity implements SocketManager.Soc
             }
         });
 
+        final Button button_close = (Button) findViewById(R.id.button_close);
+        button_close.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                mSocketManager.sendMessage("4;1");
+                setStatus("Goodbye");
+                android.os.Process.killProcess(android.os.Process.myPid());
+                System.exit(1);
+            }
+        });
+
         final Button button_send1 = (Button) findViewById(R.id.button_send1);
         button_send1.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
@@ -203,6 +274,7 @@ public class MainActivity extends AppCompatActivity implements SocketManager.Soc
         if (sensor.getType() == mRotation.getType() && send_type == 1) {
             message =  "1;" + v0 + "," + v1 + "," + v2;
             mSocketManager.sendMessage(message);
+
         }else if(sensor.getType() == mRotation.getType() && send_type == 2){
             message =  "2;" + v0 + "," + v1 + "," + v2;
             mSocketManager.sendMessage(message);

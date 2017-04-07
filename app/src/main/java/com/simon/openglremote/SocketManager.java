@@ -29,7 +29,7 @@ public class SocketManager implements WebSocketClient.Listener {
     public void connectToServer() {
         if(!isConnected){
             setIpAddress(app.getIP());
-            app.setStatus("Connecting to " + ipAddress);
+            app.setStatus(ipAddress);
             List<BasicNameValuePair> extraHeaders = Arrays.asList(
                     new BasicNameValuePair("Cookie", "session=abcd")
             );
