@@ -1,11 +1,15 @@
 package com.simon.openglremote;
 
 import android.content.Context;
+import android.graphics.Color;
 import android.graphics.Point;
+import android.graphics.PorterDuff;
+import android.graphics.PorterDuffColorFilter;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -18,6 +22,8 @@ import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.SeekBar;
 import android.widget.TextView;
+
+import java.util.Vector;
 
 public class MainActivity extends AppCompatActivity implements SocketManager.SocketListener, SensorEventListener {
 
@@ -32,6 +38,10 @@ public class MainActivity extends AppCompatActivity implements SocketManager.Soc
     private ImageView touchPad;
     private SeekBar sb_color_r, sb_color_g, sb_color_b, sb_opacity, sb_stiffness, sb_brushsize;
     private int send_type;
+    private double oldPositionX, oldPositionY, oldPositionZ;
+    private double currPositionX, currPositionY, currPositionZ;
+    private double oldRotationX, oldRotationY, oldRotationZ;
+    private double currRotationX, currRotationY, currRotationZ;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
 
@@ -39,12 +49,35 @@ public class MainActivity extends AppCompatActivity implements SocketManager.Soc
         setContentView(R.layout.activity_main);
         send_type = 1;
 
+        oldPositionX = 0.0f;
+        oldPositionY = 0.0f;
+        oldPositionZ = 0.0f;
+
+        oldRotationX = 0.0f;
+        oldRotationY = 0.0f;
+        oldRotationZ = 0.0f;
+
+        currPositionX = 0.0f;
+        currPositionY = 0.0f;
+        currPositionZ = 0.0f;
+
+        currRotationX = 0.0f;
+        currRotationY = 0.0f;
+        currRotationZ = 0.0f;
+
         sb_color_r = (SeekBar) findViewById(R.id.slider_color_r);
-        sb_color_g = (SeekBar) findViewById(R.id.slider_color_r);
-        sb_color_b = (SeekBar) findViewById(R.id.slider_color_r);
+        sb_color_g = (SeekBar) findViewById(R.id.slider_color_g);
+        sb_color_b = (SeekBar) findViewById(R.id.slider_color_b);
         sb_opacity = (SeekBar) findViewById(R.id.slider_opacity);
         sb_stiffness = (SeekBar) findViewById(R.id.slider_stiffness);
         sb_brushsize = (SeekBar) findViewById(R.id.slider_brushsize);
+
+        sb_color_r.getProgressDrawable().setColorFilter(new PorterDuffColorFilter(Color.RED, PorterDuff.Mode.MULTIPLY));
+        sb_color_g.getProgressDrawable().setColorFilter(new PorterDuffColorFilter(Color.GREEN, PorterDuff.Mode.MULTIPLY));
+        sb_color_b.getProgressDrawable().setColorFilter(new PorterDuffColorFilter(Color.BLUE, PorterDuff.Mode.MULTIPLY));
+        sb_opacity.getProgressDrawable().setColorFilter(new PorterDuffColorFilter(Color.WHITE, PorterDuff.Mode.MULTIPLY));
+        sb_stiffness.getProgressDrawable().setColorFilter(new PorterDuffColorFilter(Color.WHITE, PorterDuff.Mode.MULTIPLY));
+        sb_brushsize.getProgressDrawable().setColorFilter(new PorterDuffColorFilter(Color.WHITE, PorterDuff.Mode.MULTIPLY));
 
         touchPad = (ImageView) findViewById(R.id.touchPad);
         p1 = new Point(0,0);
@@ -194,6 +227,7 @@ public class MainActivity extends AppCompatActivity implements SocketManager.Soc
         button_connect.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 mSocketManager.connectToServer();
+                updateOldTransforms();
             }
         });
 
@@ -207,10 +241,18 @@ public class MainActivity extends AppCompatActivity implements SocketManager.Soc
             }
         });
 
+        final Button button_draw_texture = (Button) findViewById(R.id.button_draw_texture);
+        button_draw_texture.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                mSocketManager.sendMessage("7;texture_painting");
+            }
+        });
+
         final Button button_send1 = (Button) findViewById(R.id.button_send1);
         button_send1.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 send_type = 1;
+                updateOldTransforms();
             }
         });
 
@@ -218,6 +260,8 @@ public class MainActivity extends AppCompatActivity implements SocketManager.Soc
         button_send2.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 send_type = 2;
+                updateOldTransforms();
+
             }
         });
 
@@ -225,9 +269,20 @@ public class MainActivity extends AppCompatActivity implements SocketManager.Soc
         button_send3.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 send_type = 3;
+                updateOldTransforms();
             }
         });
 
+    }
+
+    private void updateOldTransforms(){
+        oldPositionX = currPositionX;
+        oldPositionY = currPositionY;
+        oldPositionZ = currPositionZ;
+
+        oldRotationX = currRotationX;
+        oldRotationY = currRotationY;
+        oldRotationZ = currRotationZ;
     }
 
     public String getIP(){
@@ -269,14 +324,28 @@ public class MainActivity extends AppCompatActivity implements SocketManager.Soc
         v0 = event.values[0];
         v1 = event.values[1];
         v2 = event.values[2];
+        currPositionX = v0;
+        currPositionY = v1;
+        currPositionZ = v2;
+        currRotationX = v0;
+        currRotationY = v1;
+        currRotationZ = v2;
 
         Sensor sensor = event.sensor;
         if (sensor.getType() == mRotation.getType() && send_type == 1) {
-            message =  "1;" + v0 + "," + v1 + "," + v2;
+
+            float sv0 = (float) (v0 - oldPositionX);
+            float sv1 = (float) (v1 - oldPositionY);
+            float sv2 = (float) (v2 - oldPositionZ);
+            message =  "1;" + sv0 + "," + sv1  + "," + sv2 ;
             mSocketManager.sendMessage(message);
 
         }else if(sensor.getType() == mRotation.getType() && send_type == 2){
-            message =  "2;" + v0 + "," + v1 + "," + v2;
+
+            float sv0 = (float) (v0 - oldRotationX);
+            float sv1 = (float) (v1 - oldPositionY);
+            float sv2 = (float) (v2 - oldPositionZ);
+            message =  "2;" + sv0 + "," + sv1  + "," + sv2 ;
             mSocketManager.sendMessage(message);
         }
 

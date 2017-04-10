@@ -73,7 +73,9 @@
                             android:layout_height="wrap_content"
                             android:text="Not Connected"
                             android:textColor="@color/brightGreen"
-                            android:textSize="10dp" />
+                            android:textSize="10dp"
+                            android:orientation="horizontal"
+                            android:gravity="center"/>
 
                     </LinearLayout>
 
@@ -125,21 +127,43 @@
                         android:layout_width="fill_parent"
                         android:layout_height="wrap_content"
                         android:orientation="horizontal">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="R"
+                            android:layout_margin="0dp"
+                            android:textSize="10dp"
+                            android:textColor="@color/white"/>
                         <SeekBar
                             android:id="@+id/slider_color_r"
                             android:layout_width="wrap_content"
                             android:layout_height="20dp"
-                            android:layout_weight="0.3"/>
+                            android:layout_weight="0.1"/>
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="G"
+                            android:layout_margin="0dp"
+                            android:textSize="10dp"
+                            android:textColor="@color/white"/>
                         <SeekBar
                             android:id="@+id/slider_color_g"
                             android:layout_width="wrap_content"
                             android:layout_height="20dp"
-                            android:layout_weight="0.3"/>
+                            android:layout_weight="0.1"/>
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="B"
+                            android:layout_margin="0dp"
+                            android:textSize="10dp"
+                            android:textColor="@color/white"/>
                         <SeekBar
                             android:id="@+id/slider_color_b"
                             android:layout_width="wrap_content"
                             android:layout_height="20dp"
-                            android:layout_weight="0.3"/>
+                            android:layout_weight="0.1"/>
                     </LinearLayout>
 
                     <SeekBar
@@ -148,19 +172,42 @@
                         android:layout_height="fill_parent"
                         android:layout_margin="1dp"
                         android:layout_weight=".050"/>
-
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Opacity"
+                        android:layout_margin="0dp"
+                        android:textSize="10dp"
+                        android:layout_gravity="center"
+                        android:textColor="@color/white"/>
                     <SeekBar
                         android:id="@+id/slider_stiffness"
                         android:layout_width="match_parent"
                         android:layout_height="fill_parent"
                         android:layout_margin="1dp"
                         android:layout_weight=".050" />
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Brush Stiffness"
+                        android:layout_margin="0dp"
+                        android:textSize="10dp"
+                        android:layout_gravity="center"
+                        android:textColor="@color/white"/>
                     <SeekBar
                         android:id="@+id/slider_brushsize"
                         android:layout_width="match_parent"
                         android:layout_height="fill_parent"
                         android:layout_margin="1dp"
                         android:layout_weight=".050"/>
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Brush Size"
+                        android:layout_margin="0dp"
+                        android:textSize="10dp"
+                        android:layout_gravity="center"
+                        android:textColor="@color/white"/>
                 </LinearLayout>
 
             </LinearLayout>
@@ -171,7 +218,7 @@
                 android:layout_width="fill_parent"
                 android:layout_height="fill_parent"
                 android:layout_gravity="top"
-                android:layout_weight="0.5"
+                android:layout_weight="0.6"
                 android:orientation="horizontal"
                 >
                 <ImageView
@@ -229,6 +276,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="50dp"
                     android:layout_margin="1dp"
+                    android:layout_weight=".10"
                     android:background="@layout/button"
                     android:text="Rotate"
                     android:textColor="@color/white" />
@@ -238,6 +286,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="50dp"
                     android:layout_margin="1dp"
+                    android:layout_weight=".10"
                     android:background="@layout/button"
                     android:text="Scale"
                     android:textColor="@color/white" />
