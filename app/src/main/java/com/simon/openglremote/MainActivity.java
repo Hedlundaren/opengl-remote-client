@@ -9,6 +9,7 @@ import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
+import android.os.Handler;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -23,7 +24,6 @@ import android.widget.ImageView;
 import android.widget.SeekBar;
 import android.widget.TextView;
 
-import java.util.Vector;
 
 public class MainActivity extends AppCompatActivity implements SocketManager.SocketListener, SensorEventListener {
 
@@ -42,12 +42,32 @@ public class MainActivity extends AppCompatActivity implements SocketManager.Soc
     private double currPositionX, currPositionY, currPositionZ;
     private double oldRotationX, oldRotationY, oldRotationZ;
     private double currRotationX, currRotationY, currRotationZ;
+
+    // Buttons
+    private Button button_send1, button_send2, button_send3, button_draw_texture;
+    private boolean texture_draw = false;
+
+    private int TRANSLATION = 0,
+            ROTATION = 1,
+            SCALE = 2,
+            CLOSE = 3,
+            TRANSLATION_DRAG = 4,
+            ROTATION_DRAG = 5,
+            TEXTURE_PAINTING = 6,
+            BRUSH_COLOR_R = 7,
+            BRUSH_COLOR_G = 8,
+            BRUSH_COLOR_B = 9,
+            BRUSH_OPACITY = 10,
+            BRUSH_STIFFNESS = 11,
+            BRUSH_SIZE = 12;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
 
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        send_type = 1;
+        send_type = SCALE;
+
 
         oldPositionX = 0.0f;
         oldPositionY = 0.0f;
@@ -100,7 +120,7 @@ public class MainActivity extends AppCompatActivity implements SocketManager.Soc
 
         sb_color_r.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                mSocketManager.sendMessage("1011;" + (float) progress / 100.0f);
+                mSocketManager.sendMessage( BRUSH_COLOR_R + ";" + (float) progress / 100.0f);
             }
             public void onStartTrackingTouch(SeekBar seekBar) { }
             public void onStopTrackingTouch(SeekBar seekBar) { }
@@ -109,7 +129,7 @@ public class MainActivity extends AppCompatActivity implements SocketManager.Soc
 
         sb_color_g.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                mSocketManager.sendMessage("1012;" + (float) progress / 100.0f);
+                mSocketManager.sendMessage(BRUSH_COLOR_G + ";" + (float) progress / 100.0f);
             }
             public void onStartTrackingTouch(SeekBar seekBar) { }
             public void onStopTrackingTouch(SeekBar seekBar) { }
@@ -118,7 +138,7 @@ public class MainActivity extends AppCompatActivity implements SocketManager.Soc
 
         sb_color_b.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                mSocketManager.sendMessage("1013;" + (float) progress / 100.0f);
+                mSocketManager.sendMessage(BRUSH_COLOR_B + ";" + (float) progress / 100.0f);
             }
             public void onStartTrackingTouch(SeekBar seekBar) { }
             public void onStopTrackingTouch(SeekBar seekBar) { }
@@ -127,7 +147,7 @@ public class MainActivity extends AppCompatActivity implements SocketManager.Soc
 
         sb_opacity.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                mSocketManager.sendMessage("102;" + (float) progress / 100.0f);
+                mSocketManager.sendMessage(BRUSH_OPACITY + ";" + (float) progress / 100.0f);
             }
             public void onStartTrackingTouch(SeekBar seekBar) { }
             public void onStopTrackingTouch(SeekBar seekBar) { }
@@ -136,7 +156,7 @@ public class MainActivity extends AppCompatActivity implements SocketManager.Soc
 
         sb_stiffness.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                mSocketManager.sendMessage("103;" + (float) progress / 100.0f);
+                mSocketManager.sendMessage(BRUSH_STIFFNESS + ";" + (float) progress / 100.0f);
             }
             public void onStartTrackingTouch(SeekBar seekBar) { }
             public void onStopTrackingTouch(SeekBar seekBar) { }
@@ -145,7 +165,7 @@ public class MainActivity extends AppCompatActivity implements SocketManager.Soc
 
         sb_brushsize.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                mSocketManager.sendMessage("104;" + (float) progress / 100.0f);
+                mSocketManager.sendMessage(BRUSH_SIZE + ";" + (float) progress / 100.0f);
             }
             public void onStartTrackingTouch(SeekBar seekBar) { }
             public void onStopTrackingTouch(SeekBar seekBar) { }
@@ -169,27 +189,27 @@ public class MainActivity extends AppCompatActivity implements SocketManager.Soc
 
                 if(action == MotionEvent.ACTION_MOVE){
                     p2 = new Point((int) event.getX(), (int) event.getY());
-                    if(send_type == 1){ // translate
+                    if(send_type == TRANSLATION){ // translate
                         p3 = new Point( p2.x - p1.x + p_translate.x, p1.y - p2.y + p_translate.y);
-                        mSocketManager.sendMessage("5;" + p3.x + "," + p3.y);
-                    }else if(send_type == 2){ // rotate
+                        mSocketManager.sendMessage( TRANSLATION_DRAG + ";" + p3.x + "," + p3.y);
+                    }else if(send_type == ROTATION){ // rotate
                         p3 = new Point( p2.x - p1.x + p_rotate.x, p1.y - p2.y + p_rotate.y);
-                        mSocketManager.sendMessage("6;" + p3.x + "," + p3.y);
-                    }else if(send_type == 3){ // scale
+                        mSocketManager.sendMessage( ROTATION_DRAG + ";" + p3.x + "," + p3.y);
+                    }else if(send_type == SCALE){ // scale
                         p3 = new Point( p2.x - p1.x + p_scale.x, p1.y - p2.y + p_scale.y);
-                        mSocketManager.sendMessage("3;" + p3.x + "," + p3.y);
+                        mSocketManager.sendMessage( SCALE + ";" + p3.x + "," + p3.y);
                     }
                     return true;
                 }
 
                 if(action == MotionEvent.ACTION_UP) {
-                    if(send_type == 1){ // translate
+                    if(send_type == TRANSLATION){ // translate
                         p_translate = p3;
 
-                    }else if(send_type == 2){ // rotate
+                    }else if(send_type == ROTATION){ // rotate
                         p_rotate = p3;
 
-                    }else if(send_type == 3){ // scale
+                    }else if(send_type == SCALE){ // scale
                         p_scale = p3;
                     }
 
@@ -228,51 +248,93 @@ public class MainActivity extends AppCompatActivity implements SocketManager.Soc
             public void onClick(View v) {
                 mSocketManager.connectToServer();
                 updateOldTransforms();
+                final Handler handler = new Handler();
+                handler.postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        //Sync client and server
+                        syncClient();
+                    }
+                }, 1000);
             }
         });
 
         final Button button_close = (Button) findViewById(R.id.button_close);
         button_close.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
-                mSocketManager.sendMessage("4;1");
+                mSocketManager.sendMessage( CLOSE + ";1");
                 setStatus("Goodbye");
                 android.os.Process.killProcess(android.os.Process.myPid());
                 System.exit(1);
             }
         });
 
-        final Button button_draw_texture = (Button) findViewById(R.id.button_draw_texture);
+        button_draw_texture = (Button) findViewById(R.id.button_draw_texture);
         button_draw_texture.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
-                mSocketManager.sendMessage("7;texture_painting");
+                mSocketManager.sendMessage(TEXTURE_PAINTING + ";1");
+
+                texture_draw = !texture_draw;
+
+                if(texture_draw){
+                    button_draw_texture.setTextColor(Color.GREEN);
+                }else{
+                    button_draw_texture.setTextColor(Color.WHITE);
+                }
             }
         });
 
-        final Button button_send1 = (Button) findViewById(R.id.button_send1);
+        button_send1 = (Button) findViewById(R.id.button_send1);
         button_send1.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
-                send_type = 1;
+                send_type = TRANSLATION;
+                setActiveButton(button_send1);
                 updateOldTransforms();
             }
         });
 
-        final Button button_send2 = (Button) findViewById(R.id.button_send2);
+        button_send2 = (Button) findViewById(R.id.button_send2);
         button_send2.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
-                send_type = 2;
+                send_type = ROTATION;
+                setActiveButton(button_send2);
                 updateOldTransforms();
-
             }
         });
 
-        final Button button_send3 = (Button) findViewById(R.id.button_send3);
+        button_send3 = (Button) findViewById(R.id.button_send3);
         button_send3.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
-                send_type = 3;
+                send_type = SCALE;
+                setActiveButton(button_send3);
                 updateOldTransforms();
             }
         });
 
+        sb_opacity.setProgress(100);
+        sb_color_g.setProgress(100);
+        sb_brushsize.setProgress(20);
+    }
+
+    private void syncClient(){
+
+        final Handler h1 = new Handler();
+        h1.postDelayed(new Runnable() { public void run() { mSocketManager.sendMessage(BRUSH_COLOR_R + ";" + (float) sb_color_r.getProgress() / 100);  }}, 100);
+        h1.postDelayed(new Runnable() { public void run() { mSocketManager.sendMessage(BRUSH_COLOR_G + ";" + (float) sb_color_g.getProgress() / 100);  }}, 100);
+        h1.postDelayed(new Runnable() { public void run() { mSocketManager.sendMessage(BRUSH_COLOR_B + ";" + (float) sb_color_b.getProgress() / 100);  }}, 100);
+        h1.postDelayed(new Runnable() { public void run() { mSocketManager.sendMessage(BRUSH_OPACITY + ";" + (float) sb_opacity.getProgress() / 100);  }}, 100);
+        h1.postDelayed(new Runnable() { public void run() { mSocketManager.sendMessage(BRUSH_STIFFNESS + ";" + (float) sb_stiffness.getProgress() / 100);  }}, 100);
+        h1.postDelayed(new Runnable() { public void run() { mSocketManager.sendMessage(BRUSH_SIZE + ";" + (float) sb_brushsize.getProgress() / 100);  }}, 100);
+        button_draw_texture.setTextColor(Color.WHITE);
+        setActiveButton(button_send3);
+    }
+
+    private void setActiveButton(Button btn){
+        button_send1.setTextColor(Color.WHITE);
+        button_send2.setTextColor(Color.WHITE);
+        button_send3.setTextColor(Color.WHITE);
+
+        btn.setTextColor(Color.GREEN);
     }
 
     private void updateOldTransforms(){
@@ -299,13 +361,10 @@ public class MainActivity extends AppCompatActivity implements SocketManager.Soc
 
     @Override
     public void OnSocketEvent(int event) {
-        Log.d("MainActivity", "OnSocketEvent");
     }
 
     protected void onResume() {
         super.onResume();
-
-
     }
 
     protected void onPause() {
@@ -313,9 +372,7 @@ public class MainActivity extends AppCompatActivity implements SocketManager.Soc
         mSensorManager.unregisterListener(this);
     }
 
-    public void onAccuracyChanged(Sensor sensor, int accuracy) {
-        Log.d("onAccuracyChanged", "accuracy: " + accuracy);
-    }
+    public void onAccuracyChanged(Sensor sensor, int accuracy) {}
 
     public void onSensorChanged(SensorEvent event) {
 
@@ -332,23 +389,24 @@ public class MainActivity extends AppCompatActivity implements SocketManager.Soc
         currRotationZ = v2;
 
         Sensor sensor = event.sensor;
-        if (sensor.getType() == mRotation.getType() && send_type == 1) {
+        if (sensor.getType() == mRotation.getType()) {
 
             float sv0 = (float) (v0 - oldPositionX);
             float sv1 = (float) (v1 - oldPositionY);
             float sv2 = (float) (v2 - oldPositionZ);
-            message =  "1;" + sv0 + "," + sv1  + "," + sv2 ;
+            message =  ROTATION + ";" + sv0 + "," + sv1  + "," + sv2 ;
             mSocketManager.sendMessage(message);
 
-        }else if(sensor.getType() == mRotation.getType() && send_type == 2){
+        }else if(false && sensor.getType() == mRotation.getType() && send_type == 2){
 
             float sv0 = (float) (v0 - oldRotationX);
             float sv1 = (float) (v1 - oldPositionY);
             float sv2 = (float) (v2 - oldPositionZ);
-            message =  "2;" + sv0 + "," + sv1  + "," + sv2 ;
+            message =  ROTATION + ";" + sv0 + "," + sv1  + "," + sv2 ;
             mSocketManager.sendMessage(message);
         }
 
 
     }
+
 }

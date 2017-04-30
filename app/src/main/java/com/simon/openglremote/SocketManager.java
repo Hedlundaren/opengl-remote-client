@@ -1,5 +1,6 @@
 package com.simon.openglremote;
 import android.graphics.Color;
+import android.os.Handler;
 import android.util.Log;
 
 import java.net.URI;
@@ -35,6 +36,8 @@ public class SocketManager implements WebSocketClient.Listener {
             );
             client = new WebSocketClient(URI.create(ipAddress), this, extraHeaders);
             client.connect();
+
+
         }
         else{
             sendMessage("4;1");
@@ -49,6 +52,7 @@ public class SocketManager implements WebSocketClient.Listener {
         isConnected = true;
         app.setStatus("Connected");
         app.setConnected();
+
 
     }
 
